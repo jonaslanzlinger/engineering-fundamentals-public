@@ -107,8 +107,8 @@ jobs:
           echo "Building image with tag: $VERSION_TAG"
 
           docker build \
-            -t jlalernreiseengineering.azurecr.io/ipt-spins:$VERSION_TAG \
-            -t jlalernreiseengineering.azurecr.io/ipt-spins:latest \
+            -t kkhregistry.azurecr.io/ipt-spins:$VERSION_TAG \
+            -t kkhregistry.azurecr.io/ipt-spins:latest \
             .
 
 
