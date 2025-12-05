@@ -1,4 +1,4 @@
-name: Testing
+name: Build and Push Docker Image
 
 on:
   pull_request:
@@ -65,6 +65,9 @@ jobs:
 
       - name: Log in to Azure Container Registry
         run: echo "** TASK B.1 - Log in to Azure Container Registry using admin credentials **"
+          docker login jlalernreiseengineering.azurecr.io \
+            --username jlalernreiseengineering \
+            --password ${{ secrets.ACR_PASSWORD }}
 
       - name: Generate and Push Git Tag for New Version
         id: versioning
@@ -73,9 +76,45 @@ jobs:
           echo "Publish the git tag to the remote repository and store it as an output for subsequent steps. (hint: use GITHUB_OUTPUT)"
           echo "full_tag=default.tag" >> "$GITHUB_OUTPUT"
 
+          # Fetch tags
+          git fetch --tags
+
+          # Get latest tag or default to v0.1
+          latest_tag=$(git tag --list 'v*' | sort -V | tail -n 1)
+          if [ -z "$latest_tag" ]; then
+            new_tag="v0.1"
+          else
+            # Strip 'v', increment by 0.1
+            version_number=$(echo "$latest_tag" | sed 's/v//')
+            new_version=$(awk -v v="$version_number" 'BEGIN { printf "%.1f\n", v + 0.1 }')
+            new_tag="v${new_version}"
+          fi
+
+          echo "Latest tag: $latest_tag"
+          echo "New tag: $new_tag"
+
+          # Create and push tag
+          git tag "$new_tag"
+          git push origin "$new_tag"
+
+          # Expose tag to later steps
+          echo "full_tag=$new_tag" >> $GITHUB_OUTPUT
+
       - name: Build the Docker image
         run: |
-          docker build -t lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }} -t lrengineering.azurecr.io/ipt-spins:latest .
+          VERSION_TAG="${{ steps.versioning.outputs.full_tag }}"
+          echo "Building image with tag: $VERSION_TAG"
+
+          docker build \
+            -t jlalernreiseengineering.azurecr.io/ipt-spins:$VERSION_TAG \
+            -t jlalernreiseengineering.azurecr.io/ipt-spins:latest \
+            .
+
 
       - name: Push the Docker image to ACR
         run: echo "** TASK B.3 - Push the docker images to the ACR **"
+        run: |
+          VERSION_TAG="${{ steps.versioning.outputs.full_tag }}"
+
+          docker push lrengineering.azurecr.io/ipt-spins:$VERSION_TAG
+          docker push lrengineering.azurecr.io/ipt-spins:latest
