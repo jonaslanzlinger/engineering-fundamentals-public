@@ -112,7 +112,6 @@ jobs:
 
 
       - name: Push the Docker image to ACR
-        run: echo "** TASK B.3 - Push the docker images to the ACR **"
         run: |
           VERSION_TAG="${{ steps.versioning.outputs.full_tag }}"
 
