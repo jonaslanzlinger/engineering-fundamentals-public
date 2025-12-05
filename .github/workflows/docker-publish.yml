@@ -115,5 +115,5 @@ jobs:
         run: |
           VERSION_TAG="${{ steps.versioning.outputs.full_tag }}"
 
-          docker push lrengineering.azurecr.io/ipt-spins:$VERSION_TAG
-          docker push lrengineering.azurecr.io/ipt-spins:latest
+          docker push jlalernreiseengineering.azurecr.io/ipt-spins:$VERSION_TAG
+          docker push jlalernreiseengineering.azurecr.io/ipt-spins:latest
